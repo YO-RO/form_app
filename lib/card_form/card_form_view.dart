@@ -4,12 +4,15 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import 'input_formatter.dart';
+import 'validator.dart';
 
 class CardFormView extends HookConsumerWidget {
   const CardFormView({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pressedSubmit = useState(false);
+
     final formKey = useMemoized(GlobalKey<FormState>.new);
     final cardNumberController = useTextEditingController(text: '');
     final nameController = useTextEditingController(text: '');
@@ -17,6 +20,8 @@ class CardFormView extends HookConsumerWidget {
     final cvcNumberController = useTextEditingController(text: '');
 
     void resetForm() {
+      pressedSubmit.value = false;
+
       // [TextFormField.initialValue]はリビルド時に[TextEditingController.text]
       // で上書きされる（[TextFormField]のソースより）。そのため、期待通りにリセットされない。
       formKey.currentState!.reset();
@@ -46,8 +51,9 @@ class CardFormView extends HookConsumerWidget {
                 HalfWidthFormatter(),
                 CardNumberInputFormatter(),
               ],
-              // TODO: careta validator
-              // validator: validateCardNumber,
+              validator: (text) => validateCardNumber(text ?? ''),
+              autovalidateMode:
+                  pressedSubmit.value ? AutovalidateMode.always : null,
               decoration: const InputDecoration(
                 labelText: 'カード番号',
                 hintText: '1234 1234 1234 1234',
@@ -66,8 +72,9 @@ class CardFormView extends HookConsumerWidget {
                 hintText: 'Taro Yamada',
                 border: OutlineInputBorder(),
               ),
-              // TODO: create validator
-              // validator: validateName,
+              validator: (text) => validateName(text ?? ''),
+              autovalidateMode:
+                  pressedSubmit.value ? AutovalidateMode.always : null,
             ),
             const SizedBox(height: 16),
             Row(
@@ -84,8 +91,10 @@ class CardFormView extends HookConsumerWidget {
                       HalfWidthFormatter(),
                       DateInputFormatter(),
                     ],
-                    // TODO: careta validator
-                    // validator: validateDate,
+                    validator: (text) =>
+                        validateDate(text ?? '', DateTime.now()),
+                    autovalidateMode:
+                        pressedSubmit.value ? AutovalidateMode.always : null,
                     decoration: const InputDecoration(
                       labelText: '有効期限',
                       hintText: 'MM / YY',
@@ -106,8 +115,9 @@ class CardFormView extends HookConsumerWidget {
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(4),
                     ],
-                    // TODO: create validator
-                    // validator: validateCVC,
+                    validator: (text) => validateCVC(text ?? ''),
+                    autovalidateMode:
+                        pressedSubmit.value ? AutovalidateMode.always : null,
                     decoration: const InputDecoration(
                       labelText: 'CVC',
                       hintText: '123',
@@ -122,6 +132,7 @@ class CardFormView extends HookConsumerWidget {
               width: double.infinity,
               child: FilledButton(
                 onPressed: () {
+                  pressedSubmit.value = true;
                   if (!formKey.currentState!.validate()) return;
 
                   // final cardNumber = int.parse(cardNumberController.text);
