@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+
+import 'input_formatter.dart';
 
 class CardFormView extends HookConsumerWidget {
   const CardFormView({super.key});
@@ -39,10 +42,9 @@ class CardFormView extends HookConsumerWidget {
               textInputAction: TextInputAction.next,
               enableIMEPersonalizedLearning: false,
               autocorrect: false,
-              inputFormatters: const [
-                // TODO: create input formatter
-                // HalfWidthFormatter(),
-                // CardNumberInputFormatter(),
+              inputFormatters: [
+                HalfWidthFormatter(),
+                CardNumberInputFormatter(),
               ],
               // TODO: careta validator
               // validator: validateCardNumber,
@@ -78,10 +80,9 @@ class CardFormView extends HookConsumerWidget {
                     textInputAction: TextInputAction.next,
                     enableIMEPersonalizedLearning: false,
                     autocorrect: false,
-                    inputFormatters: const [
-                      // TODO: create input formatter
-                      // HalfWidthFormatter(),
-                      // DateInputFormatter(),
+                    inputFormatters: [
+                      HalfWidthFormatter(),
+                      DateInputFormatter(),
                     ],
                     // TODO: careta validator
                     // validator: validateDate,
@@ -100,11 +101,10 @@ class CardFormView extends HookConsumerWidget {
                     textInputAction: TextInputAction.done,
                     autocorrect: false,
                     enableIMEPersonalizedLearning: false,
-                    inputFormatters: const [
-                      // TODO: create input formatter
-                      // HalfWidthFormatter(),
-                      // FilteringTextInputFormatter.digitsOnly,
-                      // LengthLimitingTextInputFormatter(4),
+                    inputFormatters: [
+                      HalfWidthFormatter(),
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(4),
                     ],
                     // TODO: create validator
                     // validator: validateCVC,
