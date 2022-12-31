@@ -62,8 +62,8 @@ class CardFormView extends HookConsumerWidget {
               textCapitalization: TextCapitalization.words,
               autocorrect: false,
               decoration: const InputDecoration(
-                labelText: 'カード名義',
-                hintText: 'マスター ビサ',
+                labelText: '名義人',
+                hintText: 'Taro Yamada',
                 border: OutlineInputBorder(),
               ),
               // TODO: create validator
@@ -88,7 +88,7 @@ class CardFormView extends HookConsumerWidget {
                     // validator: validateDate,
                     decoration: const InputDecoration(
                       labelText: '有効期限',
-                      hintText: '月 / 年',
+                      hintText: 'MM / YY',
                       border: OutlineInputBorder(),
                     ),
                   ),
