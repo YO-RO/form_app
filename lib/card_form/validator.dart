@@ -1,21 +1,19 @@
-String? validateCardNumber(String source) {
-  final String cardNumber = source.onlyDigit;
-
-  // TODO: カードのブランドごとに分ける
-  if (cardNumber.length < 12) return '正しいカード番号を入力してください。';
-
-  return null;
+/// [target]はInputFormatterなどで数字とdividerのみになっている必要がある。
+String? validateCardNumber(String target, int length) {
+  // dividerを削除
+  final String cardNumber = target.onlyDigit;
+  return cardNumber.length == length ? null : '正しいカード番号を入力してください。';
 }
 
-String? validateName(String source) {
-  return source.isEmpty ? 'カードに書いてある名前を入力してください。' : null;
+String? validateName(String target) {
+  return target.isEmpty ? 'カードに書いてある名前を入力してください。' : null;
 }
 
-String? validateDate(String source, DateTime now) {
+String? validateDate(String target, DateTime now) {
   final int thisYear = int.parse(now.year.toString().substring(2));
 
-  final RegExp datePattern = RegExp(r'(\d\d)\D+(\d\d)');
-  final Match? match = datePattern.firstMatch(source);
+  final RegExp datePattern = RegExp(r'^(\d\d)\D+(\d\d)$');
+  final Match? match = datePattern.firstMatch(target);
   if (match == null) {
     return '有効期限を入力してください。';
   }
@@ -29,10 +27,9 @@ String? validateDate(String source, DateTime now) {
   return null;
 }
 
-String? validateCVC(String source) {
-  final String cvcNumber = source.onlyDigit;
-  // TODO: ブランドごとに変わるのか調べる
-  return cvcNumber.length < 3 ? '正しいCVCを入力してください。' : null;
+String? validateCVC(String target) {
+  final String cvcNumber = target.onlyDigit;
+  return cvcNumber.length >= 3 ? null : '正しいCVCを入力してください。';
 }
 
 extension StringEx on String {
