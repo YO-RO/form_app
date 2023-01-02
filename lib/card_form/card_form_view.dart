@@ -49,7 +49,7 @@ class CardFormView extends HookConsumerWidget {
               autocorrect: false,
               inputFormatters: [
                 HalfWidthFormatter(),
-                CardNumberInputFormatter(),
+                CardNumberInputFormatter(const [4, 4, 4, 4]),
               ],
               validator: (text) => validateCardNumber(text ?? ''),
               autovalidateMode:

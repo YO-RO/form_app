@@ -1,13 +1,9 @@
+import 'dart:collection';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 extension _TextEditingValueEx on TextEditingValue {
-  bool textWasDeletedFrom(TextEditingValue previousValue) {
-    return previousValue.selection.isCollapsed
-        ? previousValue.selection.baseOffset > selection.baseOffset
-        : previousValue.selection.start == selection.baseOffset;
-  }
-
   TextEditingValue textCleared() {
     return replaced(TextRange(start: 0, end: text.length), '');
   }
@@ -177,8 +173,28 @@ class _TextEditingValueReplacementData {
   }
 }
 
-// [FilteringTextInputFormatter]を参考にした
 class CardNumberInputFormatter extends TextInputFormatter {
+  /// [divisionDesign]は何文字ごとに分割するにかを記したリスト。
+  /// ex) `[4, 4, 4]` -> '1234 1234 1234'のように4文字ごとに3分割する。
+  /// ex) `[3, 5, 1]` -> '123 12345 1'のように3文字、5文字、1文字の順になるように分割する。
+  CardNumberInputFormatter(List<int> divisionDesign)
+      : assert(divisionDesign.length >= 2),
+        assert(divisionDesign.every((e) => e >= 1)),
+        dividerPositions = _createDividerPositions(divisionDesign),
+        lengthOfCardNumber = divisionDesign.reduce((a, b) => a + b);
+
+  final List<int> dividerPositions;
+
+  final int lengthOfCardNumber;
+
+  static List<int> _createDividerPositions(List<int> formatDesign) {
+    final List<int> dividerPositions = [];
+    for (int count = 1; count < formatDesign.length; count++) {
+      dividerPositions.add(formatDesign.take(count).reduce((a, b) => a + b));
+    }
+    return UnmodifiableListView(dividerPositions);
+  }
+
   @override
   TextEditingValue formatEditUpdate(
     TextEditingValue oldValue,
@@ -186,13 +202,15 @@ class CardNumberInputFormatter extends TextInputFormatter {
   ) {
     if (newValue.text.isEmpty) return newValue;
 
+    final bool textWasDeleted = oldValue.selection.isCollapsed
+        ? oldValue.selection.baseOffset > newValue.selection.baseOffset
+        : oldValue.selection.start == newValue.selection.baseOffset;
+
     TextEditingValue value = newValue;
     // 数字のみにする
     value = _cleanUpText(value);
-    // 最大16桁にする（card numberは最大16桁）
-    value = _clampCardNumberCount(value, 16);
-    // 4桁ごとにスペースを入れる。
-    value = _insertSpaces(value, newValue.textWasDeletedFrom(oldValue));
+    value = _clampCardNumberCount(value, max: lengthOfCardNumber);
+    value = _insertDividers(value, textWasDeleted);
     return value;
   }
 
@@ -209,31 +227,24 @@ class CardNumberInputFormatter extends TextInputFormatter {
     return replacementData.applied();
   }
 
-  TextEditingValue _clampCardNumberCount(TextEditingValue value, int max) {
+  TextEditingValue _clampCardNumberCount(
+    TextEditingValue value, {
+    required int max,
+  }) {
     return value.text.length <= max
         ? value
         : value.replaced(TextRange(start: max, end: value.text.length), '');
   }
 
-  TextEditingValue _insertSpaces(TextEditingValue value, bool textWasDeleted) {
+  TextEditingValue _insertDividers(
+    TextEditingValue value,
+    bool textWasDeleted,
+  ) {
     final replacementData = _TextEditingValueReplacementData(value);
-
-    final Iterable<Match> matches =
-        RegExp(r'\d{4}|\d{1,3}').allMatches(value.text);
-    for (int i = 0; i < matches.length; i++) {
-      final match = matches.elementAt(i);
-
-      // 長さが4未満になりうるのは一番最後のmatchのみ
-      if (match[0]!.length < 4) break;
-      // 文字が削除されているとき、末尾に空白は入れない。
-      if (textWasDeleted && i == matches.length) break;
-      // カード番号は 4桁 x 4 = 16桁。最後の4桁の末尾に空白は入れない
-      if (i == 3) break;
-
-      replacementData.register(match.end, match.end, ' ',
+    dividerPositions.where((e) => e <= value.text.length).forEach((position) {
+      replacementData.register(position, position, ' ',
           moveCursorEnd: !textWasDeleted);
-    }
-
+    });
     return replacementData.applied();
   }
 }
